@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Category;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -14,7 +17,12 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        $categories = Category::orderBy('id', 'desc')->get();
+        return response()->json([
+            'success' => 200,
+            'message' => 'Category successfully retrieved',
+            'data' => $categories,
+        ]);
     }
 
     /**
@@ -25,7 +33,31 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validation = Validator::make($request->all(), [
+            'code' => 'required|unique:categories',
+            'name' => 'required|string|unique:categories',
+            'icon' => 'required',
+            'image' => 'required',
+            'description' => 'required',
+            'discount' => 'required|numeric',
+        ]);
+        if ($validation->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation Error',
+                'errors' => $validation->getMessageBag(),
+            ], 422);
+        }
+
+        $formData = $validation->validated();
+        $formData['slug'] = Str::slug($formData['name']);
+        Category::create($formData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Successfully Category Created!',
+            'data' => [],
+        ]);
     }
 
     /**
@@ -36,7 +68,19 @@ class CategoryController extends Controller
      */
     public function show($id)
     {
-        //
+        $category = Category::findOrFail($id);
+        if (!$category) {
+            return response()->json([
+               'success' => false,
+               'message' => 'Category not found',
+                'data' => [],
+            ], 404);
+        }
+        return response()->json([
+           'success' => 200,
+           'message' => 'Category successfully retrieved',
+            'data' => $category,
+        ]);
     }
 
     /**
@@ -48,7 +92,40 @@ class CategoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $category = Category::findOrFail($id);
+        if (!$category) {
+            return response()->json([
+               'success' => false,
+               'message' => 'Category not found',
+                'data' => [],
+            ], 404);
+        }
+
+        $validation = Validator::make($request->all(), [
+            'code' => 'required|unique:categories,code,' .$id,
+            'name' => 'required|string|unique:categories,name,'. $id,
+            'icon' => 'required',
+            'image' => 'required',
+            'description' => 'required',
+            'discount' => 'required|numeric',
+        ]);
+        if ($validation->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation Error',
+                'errors' => $validation->getMessageBag(),
+            ], 422);
+        }
+
+        $formData = $validation->validated();
+        $formData['slug'] = Str::slug($formData['name']);
+        $category->update($formData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Successfully Category Updated!',
+            'data' => [],
+        ]);
     }
 
     /**
@@ -59,6 +136,20 @@ class CategoryController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $category = Category::findOrFail($id);
+        if (!$category) {
+            return response()->json([
+               'success' => false,
+               'message' => 'Category not found',
+                'data' => [],
+            ], 404);
+        }
+
+        $category->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Successfully Category Deleted!',
+            'data' => [],
+        ]);
     }
 }
