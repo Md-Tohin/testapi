@@ -16,7 +16,7 @@ class SuccessResource extends JsonResource
     public function toArray($request)
     {
         $response = parent::toArray($request);
-        $message = array_key_exists('message', $response) ? $response['message'] : 'Post Successfully Retrieved!';
+        $message = array_key_exists('message', $response) ? $response['message'] : 'Data Successfully Retrieved!';
         $data = array_key_exists('data', $response) ? $response['data'] : [];
         return [
             'success' => true,

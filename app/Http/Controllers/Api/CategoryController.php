@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Category;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -37,7 +38,7 @@ class CategoryController extends Controller
             'code' => 'required|unique:categories',
             'name' => 'required|string|unique:categories',
             'icon' => 'required',
-            'image' => 'required',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2040',
             'description' => 'required',
             'discount' => 'required|numeric',
         ]);
@@ -51,6 +52,11 @@ class CategoryController extends Controller
 
         $formData = $validation->validated();
         $formData['slug'] = Str::slug($formData['name']);
+
+        if (array_key_exists('image', $formData)) {
+            $formData['image'] = Storage::putFile('', $formData['image']);
+        }
+
         Category::create($formData);
 
         return response()->json([
@@ -119,6 +125,12 @@ class CategoryController extends Controller
 
         $formData = $validation->validated();
         $formData['slug'] = Str::slug($formData['name']);
+
+        if (array_key_exists('image', $formData)) {
+            Storage::delete($category->image);
+            $formData['image'] = Storage::putFile('', $formData['image']);
+        }
+
         $category->update($formData);
 
         return response()->json([
@@ -144,7 +156,7 @@ class CategoryController extends Controller
                 'data' => [],
             ], 404);
         }
-
+        Storage::delete($category->image);
         $category->delete();
         return response()->json([
             'success' => true,

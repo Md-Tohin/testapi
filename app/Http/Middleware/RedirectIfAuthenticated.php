@@ -22,7 +22,16 @@ class RedirectIfAuthenticated
         $guards = empty($guards) ? [null] : $guards;
 
         foreach ($guards as $guard) {
-            if (Auth::guard($guard)->check()) {
+            if (Auth::guard($guard)->check() && $request->is('api/*')) {
+                // for api routes
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You already logged in',
+                    'data' => [],
+                ],401);
+                return talkToApiResponse([], 'You already logged in!');
+            }
+            elseif (Auth::guard($guard)->check()) {
                 return redirect(RouteServiceProvider::HOME);
             }
         }
